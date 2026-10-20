@@ -1,0 +1,96 @@
+{% extends "onlinecourse/base_bootstrap.html" %}
+{% load static %}
+
+{% block title %}{{ course.name }} | Online Course{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+
+    <!-- Course details -->
+    <div class="row">
+        <div class="col-12">
+            <h1>{{ course.name }}</h1>
+            {% if course.image %}
+            <img src="{{ course.image.url }}" class="img-fluid rounded shadow-sm my-3" alt="{{ course.name }}">
+            {% endif %}
+            <p class="lead">{{ course.description }}</p>
+            <p class="text-muted">Published on {{ course.pub_date }}</p>
+            <hr>
+        </div>
+    </div>
+
+    <!-- Related lessons -->
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-3">Lessons</h2>
+            {% if lessons %}
+                {% for lesson in lessons %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header bg-primary text-white">
+                        <strong>Lesson {{ lesson.order }}:</strong> {{ lesson.title }}
+                    </div>
+                    <div class="card-body">
+                        {% if lesson.content %}
+                        <p class="card-text">{{ lesson.content }}</p>
+                        {% endif %}
+                        {% if lesson.video %}
+                        <div class="embed-responsive embed-responsive-16by9">
+                            <video class="embed-responsive-item" width="640" height="360" controls>
+                                <source src="{{ lesson.video.url }}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <p class="text-muted">No lessons are available for this course yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Final exam -->
+    {% if user.is_authenticated %}
+    <div class="row">
+        <div class="col-12">
+            <h2 class="mb-3">Final Exam</h2>
+            <p class="text-muted">Select the best answer(s) for each question and submit your exam.</p>
+            <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
+                {% csrf_token %}
+                {% for question in course.question_set.all %}
+                <div class="card mb-3 shadow-sm">
+                    <div class="card-header">
+                        <strong>Question {{ forloop.counter }}</strong>
+                        <span class="badge badge-info float-right">{{ question.grade }} points</span>
+                        <div class="mt-1">{{ question.question_text }}</div>
+                    </div>
+                    <div class="card-body">
+                        {% for choice in question.choice_set.all %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox"
+                                   name="choice_{{ question.id }}"
+                                   value="{{ choice.id }}"
+                                   id="choice_{{ choice.id }}">
+                            <label class="form-check-label" for="choice_{{ choice.id }}">
+                                {{ choice.choice_text }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-primary btn-lg mb-3">Submit Exam</button>
+            </form>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        Please <a href="{% url 'onlinecourse:login' %}" class="alert-link">log in</a> to take the final exam for this course.
+    </div>
+    {% endif %}
+
+    <a href="{% url 'onlinecourse:index' %}" class="btn btn-outline-secondary">&laquo; Back to all courses</a>
+
+</div>
+{% endblock %}
