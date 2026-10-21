@@ -1,94 +1,58 @@
 {% extends "onlinecourse/base_bootstrap.html" %}
-{% load static %}
+
+{% block title %}{{ course.name }}{% endblock %}
 
 {% block content %}
+<div class="container mt-4 mb-5">
 
-<div class="container mt-4">
-
-    <!-- Course details -->
-    <div class="card mb-4 shadow-sm">
-        {% if course.image %}
-        <img class="card-img-top" src="{{ course.image.url }}" alt="{{ course.name }}">
-        {% endif %}
-        <div class="card-body">
-            <h1 class="card-title">{{ course.name }}</h1>
-            <p class="card-text lead">{{ course.description }}</p>
-            <p class="text-muted">Total enrollment: {{ course.total_enrollment }}</p>
-            <form action="{% url 'onlinecourse:enroll' course.id %}" method="post">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary">Enroll in this course</button>
-            </form>
-        </div>
+    <!-- Course name and description -->
+    <div class="jumbotron">
+        <h1 class="display-4">{{ course.name }}</h1>
+        <p class="lead">{{ course.description }}</p>
+        <hr class="my-4">
+        <p><strong>Total lessons:</strong> {{ course.lesson_set.count }}</p>
+        <a class="btn btn-primary btn-lg" href="{% url 'onlinecourse:exam' course.id %}" role="button">
+            Take the Exam
+        </a>
     </div>
 
-    <!-- Lessons -->
+    <!-- All lessons related to this course -->
     <h2 class="mb-3">Lessons</h2>
+
     {% if course.lesson_set.all %}
-    <div class="accordion mb-4" id="lessonAccordion">
-        {% for lesson in course.lesson_set.all %}
-        <div class="card">
-            <div class="card-header" id="lessonHeading{{ lesson.id }}">
-                <h3 class="mb-0">
-                    <button class="btn btn-link btn-block text-left" type="button"
-                            data-toggle="collapse" data-target="#lessonCollapse{{ lesson.id }}"
-                            aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
-                            aria-controls="lessonCollapse{{ lesson.id }}">
-                        Lesson {{ forloop.counter }}: {{ lesson.name }}
-                    </button>
-                </h3>
-            </div>
-            <div id="lessonCollapse{{ lesson.id }}"
-                 class="collapse {% if forloop.first %}show{% endif %}"
-                 aria-labelledby="lessonHeading{{ lesson.id }}"
-                 data-parent="#lessonAccordion">
-                <div class="card-body">
-                    <p class="card-text">{{ lesson.description }}</p>
-                    {% if lesson.video %}
-                    <div class="embed-responsive embed-responsive-16by9">
-                        <iframe class="embed-responsive-item" src="{{ lesson.video }}"
-                                title="{{ lesson.name }}" allowfullscreen></iframe>
+        <div class="accordion" id="lessonAccordion">
+            {% for lesson in course.lesson_set.all %}
+                <div class="card">
+                    <div class="card-header" id="heading{{ lesson.id }}">
+                        <h2 class="mb-0">
+                            <button class="btn btn-link btn-block text-left" type="button"
+                                    data-toggle="collapse" data-target="#collapse{{ lesson.id }}"
+                                    aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}"
+                                    aria-controls="collapse{{ lesson.id }}">
+                                Lesson {{ lesson.order }}: {{ lesson.title }}
+                            </button>
+                        </h2>
                     </div>
-                    {% endif %}
+
+                    <div id="collapse{{ lesson.id }}"
+                         class="collapse {% if forloop.first %}show{% endif %}"
+                         aria-labelledby="heading{{ lesson.id }}"
+                         data-parent="#lessonAccordion">
+                        <div class="card-body">
+                            <p class="card-text">{{ lesson.content }}</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
     {% else %}
-    <p class="text-muted">No lessons are available for this course yet.</p>
+        <div class="alert alert-info" role="alert">
+            No lessons have been added to this course yet.
+        </div>
     {% endif %}
 
-    <!-- Exam -->
-    <h2 class="mb-3">Course Exam</h2>
-    <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
-        {% csrf_token %}
-        {% for question in course.question_set.all %}
-        <div class="card mb-3">
-            <div class="card-header">
-                <strong>Question {{ forloop.counter }}:</strong> {{ question.question_text }}
-            </div>
-            <div class="card-body">
-                {% for choice in question.choice_set.all %}
-                <div class="form-check">
-                    <input class="form-check-input" type="radio"
-                           name="choice_{{ question.id }}"
-                           id="choice_{{ choice.id }}"
-                           value="{{ choice.id }}">
-                    <label class="form-check-label" for="choice_{{ choice.id }}">
-                        {{ choice.choice_text }}
-                    </label>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% empty %}
-        <p class="text-muted">No exam questions are available for this course yet.</p>
-        {% endfor %}
-        <button type="submit" class="btn btn-success mb-4">Submit Exam</button>
-    </form>
-
-    <a href="{% url 'onlinecourse:index' %}" class="btn btn-secondary mb-4">&laquo; Back to course list</a>
-
+    <a href="{% url 'onlinecourse:index' %}" class="btn btn-secondary mt-4">
+        &laquo; Back to all courses
+    </a>
 </div>
-
 {% endblock %}
