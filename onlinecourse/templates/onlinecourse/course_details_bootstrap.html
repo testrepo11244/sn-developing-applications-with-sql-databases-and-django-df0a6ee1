@@ -1,90 +1,42 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ course.name }} | Online Course</title>
-    <!-- Bootstrap 4 CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <!-- jQuery library -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <!-- Popper JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <!-- Bootstrap 4 JS -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <style>
-        body {
-            background-color: #f4f6f8;
-        }
-        .course-image {
-            max-height: 320px;
-            object-fit: cover;
-            width: 100%;
-        }
-        .lesson-item {
-            border-left: 4px solid #007bff;
-        }
-    </style>
-</head>
-<body>
+{% extends 'onlinecourse/base.html' %}
 
-    <!-- Navigation bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="{% url 'index' %}">Online Course</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'index' %}">Home</a>
-                </li>
-            </ul>
+{% block content %}
+
+<div class="container mt-4 mb-5">
+
+    <!-- Course header: displays the course name -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body bg-light">
+            <h1 class="display-5 text-primary">{{ course.name }}</h1>
+            <p class="lead text-muted">{{ course.description }}</p>
+            <hr>
+            <p class="mb-0">
+                <span class="badge badge-info">Published: {{ course.pub_date|date:"F d, Y" }}</span>
+            </p>
         </div>
-    </nav>
+    </div>
 
-    <div class="container mt-4">
+    <!-- All related lessons for this course -->
+    <h2 class="mb-3">Lessons</h2>
 
-        <!-- Course details card -->
-        <div class="card shadow-sm">
-            {% if course.image %}
-            <img class="card-img-top course-image" src="{{ course.image.url }}" alt="{{ course.name }}">
-            {% endif %}
-            <div class="card-body">
-                <h1 class="card-title">{{ course.name }}</h1>
-                <p class="card-text">{{ course.description }}</p>
-                <p class="text-muted">
-                    Published: {{ course.pub_date|date:"F d, Y" }} &nbsp;|&nbsp;
-                    Total enrolled: {{ course.total_enrollment }}
-                </p>
-            </div>
-        </div>
-
-        <!-- Lessons section -->
-        <h2 class="mt-4 mb-3">Lessons</h2>
-
-        {% if lessons %}
+    {% if lessons %}
         <div class="list-group">
             {% for lesson in lessons %}
-            <div class="list-group-item lesson-item">
-                <h5 class="mb-1">{{ lesson.title }}</h5>
-                <p class="mb-0 text-muted">Lesson {{ lesson.order }}</p>
+            <div class="list-group-item list-group-item-action">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1 text-dark">{{ lesson.title }}</h5>
+                    <small class="text-muted">Lesson {{ lesson.order }}</small>
+                </div>
+                <p class="mb-1">{{ lesson.content }}</p>
             </div>
             {% endfor %}
         </div>
-        {% else %}
-        <div class="alert alert-info" role="alert">
-            No lessons are available for this course yet.
-        </div>
-        {% endif %}
+    {% else %}
+        <div class="alert alert-info">No lessons have been added to this course yet.</div>
+    {% endif %}
 
-    </div>
+    <a href="{% url 'onlinecourse:index' %}" class="btn btn-outline-primary mt-4">&laquo; Back to all courses</a>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-        <p class="mb-0">&copy; 2024 Online Course. All rights reserved.</p>
-    </footer>
+</div>
 
-</body>
-</html>
+{% endblock %}
