@@ -1,108 +1,82 @@
+{% extends "onlinecourse/base.html" %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>{{ course.name }} | OnlineCourse</title>
-    <!-- Bootstrap 4 CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <style>
-        .course-hero {
-            background: linear-gradient(135deg, #343a40 0%, #495057 100%);
-            color: #ffffff;
-        }
-        .lesson-card {
-            border-left: 4px solid #007bff;
-        }
-        .course-image {
-            max-height: 320px;
-            object-fit: cover;
-            width: 100%;
-        }
-    </style>
-</head>
-<body class="bg-light">
 
-    <!-- Navigation bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="{% url 'onlinecourse:index' %}">OnlineCourse</a>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ml-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'onlinecourse:index' %}">Courses</a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+{% block title %}{{ course.name }} | Online Course Application{% endblock %}
 
-    <div class="container mt-4 mb-5">
+{% block content %}
+<div class="container mt-4 mb-5">
 
-        <!-- Course header: course name and description -->
-        <div class="card shadow-sm mb-4">
-            {% if course.image %}
-                <img src="{{ course.image.url }}" class="card-img-top course-image" alt="{{ course.name }}">
-            {% endif %}
-            <div class="card-body course-hero">
-                <h1 class="display-5">{{ course.name }}</h1>
-                <p class="lead mb-2">{{ course.description }}</p>
-                <p class="mb-0"><small>Published on {{ course.pub_date|date:"F d, Y" }} &middot; {{ lessons|length }} lesson{{ lessons|length|pluralize }}</small></p>
+    <!-- Course header -->
+    <div class="jumbotron bg-light p-4">
+        <div class="row">
+            <div class="col-md-8">
+                <h1 class="display-4">{{ course.name }}</h1>
+                <p class="lead">{{ course.description }}</p>
+                <hr class="my-4">
+                <p class="text-muted">Published on {{ course.pub_date|date:"F d, Y" }}</p>
+                <a href="{% url 'onlinecourse:index' %}" class="btn btn-outline-secondary btn-sm">&laquo; Back to all courses</a>
             </div>
-            <div class="card-footer bg-white text-right">
-                <a href="{% url 'onlinecourse:registration' course.id %}" class="btn btn-primary">
-                    Register for the exam
-                </a>
+            <div class="col-md-4">
+                {% if course.image %}
+                <img src="{{ course.image.url }}" class="img-fluid rounded shadow-sm" alt="{{ course.name }}">
+                {% endif %}
             </div>
         </div>
-
-        <!-- Related lessons -->
-        <h2 class="mb-3">Lessons</h2>
-
-        {% if lessons %}
-            <div class="accordion" id="lessonAccordion">
-                {% for lesson in lessons %}
-                    <div class="card lesson-card mb-2">
-                        <div class="card-header bg-white" id="heading{{ lesson.id }}">
-                            <h5 class="mb-0">
-                                <button class="btn btn-link text-dark font-weight-bold" type="button"
-                                        data-toggle="collapse" data-target="#collapse{{ lesson.id }}"
-                                        aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
-                                    Lesson {{ lesson.order }}: {{ lesson.title }}
-                                </button>
-                            </h5>
-                        </div>
-
-                        <div id="collapse{{ lesson.id }}"
-                             class="collapse {% if forloop.first %}show{% endif %}"
-                             aria-labelledby="heading{{ lesson.id }}"
-                             data-parent="#lessonAccordion">
-                            <div class="card-body">
-                                <p class="mb-0">{{ lesson.content }}</p>
-                            </div>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="alert alert-info">
-                No lessons have been added to this course yet. Please check back later.
-            </div>
-        {% endif %}
-
-        <a href="{% url 'onlinecourse:index' %}" class="btn btn-outline-secondary mt-4">
-            &laquo; Back to all courses
-        </a>
     </div>
 
-    <footer class="bg-dark text-white text-center py-3">
-        <p class="mb-0">&copy; 2025 OnlineCourse. All rights reserved.</p>
-    </footer>
+    <!-- Lessons -->
+    <h2 class="mt-4 mb-3 border-bottom pb-2">Lessons</h2>
+    <div class="row">
+        {% for lesson in course.lesson_set.all %}
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">{{ lesson.order }}. {{ lesson.title }}</h5>
+                    <p class="card-text">{{ lesson.content|truncatewords:30 }}</p>
+                </div>
+                <div class="card-footer bg-white">
+                    <a href="{% url 'onlinecourse:lesson' lesson.id %}" class="btn btn-primary btn-sm">Go to lesson</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">No lessons have been added to this course yet.</div>
+        </div>
+        {% endfor %}
+    </div>
 
-</body>
-</html>
+    <!-- Final exam -->
+    {% if user.is_authenticated %}
+        {% if course.question_set.all %}
+        <h2 class="mt-4 mb-3 border-bottom pb-2">Final Exam</h2>
+        <form action="{% url 'onlinecourse:submit' course.id %}" method="post">
+            {% csrf_token %}
+            {% for question in course.question_set.all %}
+            <div class="card mb-3 shadow-sm">
+                <div class="card-header">
+                    <strong>Question {{ forloop.counter }}.</strong> {{ question.content }}
+                    <span class="badge badge-secondary float-right">{{ question.grade }} points</span>
+                </div>
+                <div class="card-body">
+                    {% for choice in question.choice_set.all %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="choice_{{ question.id }}"
+                               id="choice_{{ choice.id }}" value="{{ choice.id }}" required>
+                        <label class="form-check-label" for="choice_{{ choice.id }}">{{ choice.content }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-success btn-lg">Submit Exam</button>
+        </form>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning mt-4">
+            Please <a href="{% url 'login' %}" class="alert-link">log in</a> to take the final exam for this course.
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}
